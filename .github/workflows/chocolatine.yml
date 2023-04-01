@@ -1,0 +1,55 @@
+on:
+  push:
+    branches-ignore:
+      - "ga-ignore-*"
+  pull_request:
+    branches-ignore:
+      - "ga-ignore-*"
+
+env:
+  EXECUTABLES: "test"
+  ARGV: ""
+
+jobs:
+  check_coding_style:
+    runs-on: ubuntu-latest
+    container: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - uses: actions/checkout@v3
+      - id: check_coding_style
+        run: |
+          check.sh $(pwd) $(pwd)
+          if [ ! -e coding-style-reports.log ]
+          then
+            exit 1
+          fi
+          SIZE=$(wc -c < coding-style-reports.log)
+          if [ $SIZE -eq 0 ]
+          then
+            exit 0
+          else
+            while IFS= read -r line
+            do
+              echo "::error::$line"
+            done < coding-style-reports.log
+            exit 1
+          fi
+
+  check_program_compilation:
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - uses: actions/checkout@v3
+      - id: check_program_compilation
+        run: make
+        timeout-minutes: 2
+      - run: make clean
+      - run: |
+          for x in ${{ env.EXECUTABLES }};
+          do
+            if [ ! test -x ./$x ]
+            then
+              exit 84
+            fi
+          done
