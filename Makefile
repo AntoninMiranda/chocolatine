@@ -5,7 +5,7 @@
 ## Makefile
 ##
 
-NAME	= mysh
+NAME	= test
 
 CC	= gcc
 
